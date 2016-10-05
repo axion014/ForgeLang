@@ -1,0 +1,8 @@
+
+c.printf("%s",
+	"foo\n" )
+int y = 5
+c.printf("%d\n",
+	y ++ )
+c.printf("%d",
+	2 + ++y * 4 )

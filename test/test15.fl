@@ -1,0 +1,9 @@
+
+int z = 5
+int printAndReturnPow2(int x)
+	int z = x * x
+	c.printf("%d\n", z)
+	return z
+
+c.printf ( "%d\n", printAndReturnPow2(3))
+c.printf( "%d" ,z)

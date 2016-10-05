@@ -1,0 +1,15 @@
+
+uses c standard static library stdio
+
+double double limit(double[] nums)
+	double min = Double.MAX
+	double max = Double.MIN
+	for(nums -> double num)
+		if num < min: min = num
+		if num > max: max = num
+	return min max
+
+(double min, max) = limit([298.375, -64.58, 892.436, -164.704])
+(double, double) limit = (min, max)
+	
+printf("%lf~%lf", limit)

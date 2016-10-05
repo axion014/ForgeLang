@@ -1,0 +1,3 @@
+int  i
+i++ 
+c.printf( "%d", i)
