@@ -4,7 +4,7 @@ import java.io.*;
 
 import io.github.axion014.forgelang.core.Compiler;
 import io.github.axion014.forgelang.core.exception.CompileFailedException;
-import snippet.debug.DebugUtil;
+import io.github.axion014.forgelang.tool.DebugUtil;
 
 public class Main {
 	public static void main(String[] args) {

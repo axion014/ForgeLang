@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import io.github.axion014.forgelang.core.word.Word;
-import snippet.throwablefunction.ThrowableSupplier;
+import io.github.axion014.forgelang.tool.throwablefunction.ThrowableSupplier;
 
 public class Scope implements Iterable<Word> {
 	public Scope parent;

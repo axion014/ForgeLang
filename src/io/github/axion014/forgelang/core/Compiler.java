@@ -8,8 +8,8 @@ import java.util.regex.Pattern;
 import io.github.axion014.forgelang.core.exception.CompileFailedException;
 import io.github.axion014.forgelang.core.exception.MatchingFailedException;
 import io.github.axion014.forgelang.core.word.*;
-import snippet.debug.DebugUtil;
-import snippet.throwablefunction.*;
+import io.github.axion014.forgelang.tool.DebugUtil;
+import io.github.axion014.forgelang.tool.throwablefunction.*;
 
 public class Compiler {
 	private int cursor;
@@ -70,7 +70,7 @@ public class Compiler {
 			cursor++;
 		}
 	}
-	
+
 	public List<Symbol> getParams() throws CompileFailedException {
 		expect('(');
 		List<Symbol> params = new LinkedList<>();
@@ -188,9 +188,12 @@ public class Compiler {
 			cursor += nowtype.length;
 			if (priority <= nowtype.priority) {
 				skipSpaces(false);
-				//@formatter:off
-				Word tmp = new BinaryOperator() {{type = nowtype;right = readNext(nowtype.priority + 1);}};
-				//@formatter:on
+				// @formatter:off
+				Word tmp = new BinaryOperator() {{
+					type = nowtype;
+					right = readNext(nowtype.priority + 1);
+				}};
+				// @formatter:on
 				((BinaryOperator) tmp).left = word;
 				word = tmp;
 			} else {
@@ -231,47 +234,49 @@ public class Compiler {
 			} catch (MatchingFailedException e) {
 				throw new InternalError();
 			}
-		} else {
-			return doIfMatchHereElse(funcPattern, (name) -> {
-				cursor += name.length();
-				expect('(');
-				List<Word> args = new LinkedList<>();
-				for (;;) {
-					skipSpaces(true);
-					if (hereChar() == ')') break;
-					args.add(readNext(1));
-					if (hereChar() == ')') break;
-					expect(',');
+		} else return doIfMatchHereElse(funcPattern, (name) -> {
+			cursor += name.length();
+			expect('(');
+			List<Word> args = new LinkedList<>();
+			for (;;) {
+				skipSpaces(true);
+				if (hereChar() == ')') {
+					break;
 				}
-				cursor++;
-				Value value;
-				if (name.startsWith("c.")) {
-					name = name.substring(2);
-					value = new CFuncCall();
-					((CFuncCall) value).name = name;
-					((CFuncCall) value).args = args;
-				} else {
-					value = new FuncCall();
-					((FuncCall) value).name = name;
-					((FuncCall) value).args = args;
+				args.add(readNext(1));
+				if (hereChar() == ')') {
+					break;
 				}
-				return value;
-			}, () -> {
-				return doIfMatchHereElse(typePattern, (type) -> {
-					cursor += type.length();
-					skipSpaces(false);
-					if (Pattern.compile("\\A[a-zA-Z_]\\w*\\(([^,]+)?+(,([^,]+))*\\)\\s*\n(\t{" + (nest + 1) + "}.*)+")
+				expect(',');
+			}
+			cursor++;
+			Value value;
+			if (name.startsWith("c.")) {
+				name = name.substring(2);
+				value = new CFuncCall();
+				((CFuncCall) value).name = name;
+				((CFuncCall) value).args = args;
+			} else {
+				value = new FuncCall();
+				((FuncCall) value).name = name;
+				((FuncCall) value).args = args;
+			}
+			return value;
+		}, () -> {
+			return doIfMatchHereElse(typePattern, (type) -> {
+				cursor += type.length();
+				skipSpaces(false);
+				if (Pattern.compile("\\A[a-zA-Z_]\\w*\\(([^,]+)?+(,([^,]+))*\\)\\s*\n(\t{" + (nest + 1) + "}.*)+")
 						.matcher(hereCode()).find()) {
-						moveToNextLine();
-						skipBlock();
-						return readPrimitive(true);
-					}
-					return makeSymbol(type);
-				}, () -> {
-					return readSymbol();
-				});
+					moveToNextLine();
+					skipBlock();
+					return readPrimitive(true);
+				}
+				return makeSymbol(type);
+			}, () -> {
+				return readSymbol();
 			});
-		}
+		});
 	}
 
 	private Symbol readSymbol() throws CompileFailedException {
@@ -334,7 +339,7 @@ public class Compiler {
 		}
 		return false;
 	}
-	
+
 	public void exitScope() {
 		scope = scope.parent;
 	}
@@ -384,7 +389,7 @@ public class Compiler {
 	}
 
 	private void expect(char c, String message) throws CompileFailedException {
-		if (hereChar() != c) { throw new CompileFailedException(message); }
+		if (hereChar() != c) throw new CompileFailedException(message);
 		cursor++;
 	}
 

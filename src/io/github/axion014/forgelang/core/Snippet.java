@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 import io.github.axion014.forgelang.core.exception.MatchingFailedException;
 import io.github.axion014.forgelang.core.word.*;
-import snippet.throwablefunction.*;
+import io.github.axion014.forgelang.tool.throwablefunction.*;
 
 public class Snippet {
 
