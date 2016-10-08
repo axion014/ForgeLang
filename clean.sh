@@ -1,4 +1,6 @@
 
+cd $(dirname $0)
+
 s=false
 while [ -n "$1" ]; do
   if [ $1 = "-s" ]; then
