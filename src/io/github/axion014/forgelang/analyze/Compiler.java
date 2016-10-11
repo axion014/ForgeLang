@@ -16,16 +16,33 @@ import io.github.axion014.forgelang.writer.*;
 public class Compiler {
 	private int cursor;
 	private String code;
+	/**
+	 * コード内で定義された変数。
+	 */
 	public SymbolOriginal variables = null;
+	/**
+	 * コード内で定義された関数。
+	 */
 	public Func functions = null;
 	private int line;
 	private int nest;
+	/**
+	 * 現在のスコープ。
+	 */
 	public Scope scope;
 
 	public Compiler(String code) {
 		this.code = code;
 	}
-
+	
+	/**
+	 * コンパイルします。
+	 * 
+	 * @param writer
+	 *            構文木から出力コードに変換するためのオブジェクト
+	 * @return コンパイルの結果
+	 * @throws CompileFailedException
+	 */
 	public String compile(DestinationWriter writer) throws CompileFailedException {
 		StringBuilder output = new StringBuilder();
 		List<Word> exprs = new LinkedList<>();
@@ -72,6 +89,12 @@ public class Compiler {
 		}
 	}
 
+	/**
+	 * カーソルが仮引数のカッコの前にあるときに呼び出すと、カーソルを次の行の初めに移動し、リストを返します。
+	 * 
+	 * @return 仮引数が含まれたリスト
+	 * @throws CompileFailedException
+	 */
 	public List<Symbol> getParams() throws CompileFailedException {
 		expect('(');
 		List<Symbol> params = new LinkedList<>();
@@ -94,6 +117,14 @@ public class Compiler {
 		return params;
 	}
 
+	/**
+	 * カーソルがブロックの初めにある状態で呼び出すと、カーソルをブロックの終わりまで移動し、中の式を返します。
+	 * 
+	 * @param isFunc
+	 *            ブロックが関数か
+	 * @return ブロック内にある式のリスト
+	 * @throws CompileFailedException
+	 */
 	public List<Word> readBlock(boolean isFunc) throws CompileFailedException {
 		nest++;
 		List<Word> exprs = new LinkedList<>();
@@ -209,7 +240,7 @@ public class Compiler {
 		skipSpaces(isFirstWord);
 		if (!isFirstWord && hereChar() == '"') {
 			if (code.indexOf('"', cursor + 1) == -1) throw new CompileFailedException("Unterminated string");
-			OmniStr value = new OmniStr(code.substring(cursor + 1, code.indexOf('"', cursor + 1)).replace("\n", ""));
+			FLStr value = new FLStr(code.substring(cursor + 1, code.indexOf('"', cursor + 1)).replace("\n", ""));
 			int localcursor = 0;
 			int escape;
 			while ((escape = value.value.indexOf('\\', localcursor)) != -1) {
@@ -230,7 +261,7 @@ public class Compiler {
 		} else if (!isFirstWord && Character.isDigit(hereChar())) {
 			try {
 				return doIfMatchHere(intPattern, (hit) -> {
-					OmniInt value = new OmniInt(Integer.parseInt(hit));
+					FLInt value = new FLInt(Integer.parseInt(hit));
 					cursor += value.length;
 					return value;
 				});
@@ -343,6 +374,9 @@ public class Compiler {
 		return false;
 	}
 
+	/**
+	 * 現在のスコープを脱出します。
+	 */
 	public void exitScope() {
 		scope = scope.parent;
 	}
@@ -387,6 +421,14 @@ public class Compiler {
 		return false;
 	}
 
+	/**
+	 * かかる時間を計測してコンパイルします。
+	 * 
+	 * @param writer
+	 *            構文木から出力コードに変換するためのオブジェクト
+	 * @return コンパイルの結果
+	 * @throws CompileFailedException
+	 */
 	public String compileWithBenchmark(DestinationWriter writer) throws CompileFailedException {
 		return DebugUtil.benchMark(() -> compile(writer), "Compile time");
 	}

@@ -13,7 +13,7 @@ public class AssemblyWriter implements DestinationWriter {
 	int line;
 	private List<Func> funcs;
 	private List<Symbol> afters;
-	private List<OmniStr> strings;
+	private List<FLStr> strings;
 	private List<String> cfuncs;
 	private String a;
 	private String b;
@@ -34,10 +34,10 @@ public class AssemblyWriter implements DestinationWriter {
 	}
 
 	private void writeExpr(Word expr) {
-		if (expr instanceof OmniInt) {
-			assembly.append(String.format("mov " + a + ", %d\n\t", ((OmniInt) expr).value));
-		} else if (expr instanceof OmniStr) {
-			assembly.append("mov " + a + ", s" + ((OmniStr) expr).pos + "\n\t");
+		if (expr instanceof FLInt) {
+			assembly.append(String.format("mov " + a + ", %d\n\t", ((FLInt) expr).value));
+		} else if (expr instanceof FLStr) {
+			assembly.append("mov " + a + ", s" + ((FLStr) expr).pos + "\n\t");
 		} else if (expr instanceof BinaryOperator) {
 			if (((BinaryOperator) expr).type == BinaryOperatorType.SGN) {
 				writeExpr(((BinaryOperator) expr).right);
@@ -81,6 +81,7 @@ public class AssemblyWriter implements DestinationWriter {
 		} else if (expr instanceof CFuncCall) {
 			List<Word> args = new LinkedList<>(((CFuncCall) expr).args);
 			Collections.reverse(args);
+			int stack = args.size() * (is64bit ? 8 : 4);
 			if (is64bit) {
 				for (int i = 0; i < 6; i++) {
 					if (args.isEmpty()) break;
@@ -94,15 +95,15 @@ public class AssemblyWriter implements DestinationWriter {
 				assembly.append("push " + a + "\n\t");
 			}
 			assembly.append("call _" + ((CFuncCall) expr).name + "\n\t");
-			assembly.append("add " + sp + ", " + args.size() * (is64bit ? 8 : 4) + "\n\t");
+			assembly.append("sub " + sp + ", " + stack + "\n\t");
 		} else {
 			throw new InternalError("Invaild word found when writeing assembly");
 		}
 	}
 	
 	private void scanExpr(Word expr) {
-		if (expr instanceof OmniStr) {
-			strings.add((OmniStr) expr);
+		if (expr instanceof FLStr) {
+			strings.add((FLStr) expr);
 		}
 		if (expr instanceof CFuncCall && !cfuncs.contains(((CFuncCall) expr).name)) {
 			cfuncs.add(((CFuncCall) expr).name);
@@ -187,8 +188,9 @@ public class AssemblyWriter implements DestinationWriter {
 		}
 		if (strings != null) {
 			assembly.append("\tsection .data\n");
-			for (OmniStr string : strings) {
-				assembly.append("s" + string.pos + " db \"" + string.value + "\"\n");
+			for (FLStr string : strings) {
+				string.value = string.value.replaceAll("\\\\n", "\", 0xa, \"");
+				assembly.append("s" + string.pos + " db \"" + string.value + "\", 0\n");
 			}
 			assembly.append("\t");
 		}

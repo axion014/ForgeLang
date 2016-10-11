@@ -2,9 +2,9 @@ package io.github.axion014.forgelang.analyze.word;
 
 import io.github.axion014.forgelang.tool.Snippet;
 
-public class OmniInt extends Value {
+public class FLInt extends Value {
 	public int value;
-	public OmniInt(int value) {
+	public FLInt(int value) {
 		this.value = value;
 		length = Snippet.stringSize(value);
 	}
