@@ -1,10 +1,31 @@
 
 cd $(dirname $0)
 
+if [ "$(uname)" = 'Darwin' ]; then
+  OS='Mac'
+  rat='macho64'
+elif [ "$(expr substr $(uname -s) 1 5)" = 'Linux' ]; then
+  OS='Linux'
+  rat='elf'
+elif [ "$(expr substr $(uname -s) 1 10)" = 'MINGW32_NT' ]; then                                                                                           
+  OS='Windows'
+  rat='win'
+elif [ "$(expr substr $(uname -s) 1 10)" = 'MINGW64_NT' ]; then                                                                                           
+  OS='Windows'
+  rat='win64'
+else
+  echo "Your platform ($(uname -a)) is not supported."
+  exit 1
+fi
+
 function test {
   ./clean.sh -s
   java -jar ../../Jar/fl.jar $1 | :
-  gcc -o test.exe driver.c out.o -Wl,-no_pie || exit
+  if [ $OS = 'Windows' ]; then
+    gcc -o test.exe driver.c out.o || exit
+  else
+  	gcc -o test.exe driver.c out.o -Wl,-no_pie || exit
+  fi
   expected=`echo -e "$2"`
   if type dos2unix &>/dev/null; then
     result=`./test.exe | dos2unix`

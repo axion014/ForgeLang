@@ -8,6 +8,7 @@ import io.github.axion014.forgelang.analyze.Compiler;
 import io.github.axion014.forgelang.analyze.exception.CompileFailedException;
 import io.github.axion014.forgelang.tool.DebugUtil;
 import io.github.axion014.forgelang.tool.Platforms;
+import io.github.axion014.forgelang.tool.UnsuppotedPlatformException;
 import io.github.axion014.forgelang.writer.AssemblyWriter;
 
 public class Main {
@@ -63,7 +64,7 @@ public class Main {
 						filewriter.write(new Compiler(input(input)).compileWithBenchmark(new AssemblyWriter(is64bit)));
 					}
 					assembleWithBenchmark(outAssembly, outobj);
-				} catch (IOException e) {
+				} catch (IOException | UnsuppotedPlatformException e) {
 					e.printStackTrace();
 					System.exit(1);
 				}
@@ -102,7 +103,7 @@ public class Main {
 		}
 	}
 
-	private static void assemble(File assembly, File outobj) throws IOException {
+	private static void assemble(File assembly, File outobj) throws IOException, UnsuppotedPlatformException {
 		System.out.println("Output to " + outobj.getCanonicalPath());
 		String outplatstr;
 		if (outplatform == WIN64) {
@@ -114,7 +115,7 @@ public class Main {
 		} else if (outplatform == LINUX64) {
 			outplatstr = "elf64";
 		} else {
-			outplatstr = "win32";
+			outplatstr = "win";
 		}
 		Process process = null;
 		if (nativeplatform == WIN || nativeplatform == WIN64) {
@@ -123,7 +124,7 @@ public class Main {
 		} else if (nativeplatform == MAC) {
 			process = new ProcessBuilder("lib/nasm/nasm", "-f", outplatstr, "-o", outobj.getCanonicalPath(),
 				assembly.getCanonicalPath()).start();
-		}
+		} else throw new UnsuppotedPlatformException();
 		try (BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
 				BufferedReader er = new BufferedReader(new InputStreamReader(process.getErrorStream()));) {
 			while (process.isAlive()) {
@@ -139,7 +140,7 @@ public class Main {
 		}
 	}
 
-	private static void assembleWithBenchmark(File assembly, File outobj) {
+	private static void assembleWithBenchmark(File assembly, File outobj) throws UnsuppotedPlatformException {
 		DebugUtil.benchMark(() -> {
 			try {
 				assemble(assembly, outobj);

@@ -2,10 +2,26 @@
 
 cd $(dirname $0)
 
+if [ "$(uname)" = 'Darwin' ]; then
+  OS='Mac'
+  rat='macho64'
+elif [ "$(expr substr $(uname -s) 1 5)" = 'Linux' ]; then
+  OS='Linux'
+  rat='elf'
+elif [ "$(expr substr $(uname -s) 1 10)" = 'MINGW32_NT' ]; then                                                                                           
+  OS='Windows'
+  rat='win'
+elif [ "$(expr substr $(uname -s) 1 10)" = 'MINGW64_NT' ]; then                                                                                           
+  OS='Windows'
+  rat='win64'
+else
+  echo "Your platform ($(uname -a)) is not supported."
+  exit 1
+fi
+
 o="out.o"
 v=""
 ra=false
-rat=win64
 gccopts=""
 c=false
 i=false
@@ -27,12 +43,16 @@ while [ -n "$1" ]; do
     o=""
   elif [ "$1" = "-gccopts" ]; then
     shift
-    gccopts="$1 "
+    gccopts="$1"
   else
     o="$1"
   fi
   shift
 done
+
+if [ ! $OS = 'Windows' ]; then
+  gccopts="$gccopts -Wl,-no_pie"
+fi
 
 if $i; then
   ./clean.sh -s
@@ -43,11 +63,15 @@ if $i; then
   o="out.o"
 elif $ra; then
   rm -f $o
-  lib/nasm/nasm -f $rat -o $o tmp.asm
+  if [ $OS = 'Windows' ]; then
+    lib/nasm/nasm.exe -f $rat -o $o tmp.asm
+  else
+  	lib/nasm/nasm -f $rat -o $o tmp.asm
+  fi
 fi
 
-echo "gcc $v-o test.exe driver.c $o $gccopts-Wl,-no_pie"
-gcc $v-o test.exe driver.c $o $gccopts-Wl,-no_pie || exit
+echo "gcc $v-o test.exe driver.c $o $gccopts"
+gcc $v-o test.exe driver.c $o $gccopts || exit
 echo "You got \"`./test.exe`\""
 
 if $c; then
