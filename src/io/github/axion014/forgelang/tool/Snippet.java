@@ -19,7 +19,7 @@ public class Snippet {
 	}
 
 	public static int lengthOf(Word word) {
-		if (word instanceof OmniInt || word instanceof OmniStr) {
+		if (word instanceof FLInt || word instanceof FLStr) {
 			return ((Value) word).length;
 		} else if (word instanceof BinaryOperator) {
 			return ((BinaryOperator) word).type.length;
@@ -29,10 +29,10 @@ public class Snippet {
 	}
 
 	public static Object valueOf(Value value) {
-		if (value instanceof OmniInt) {
-			return ((OmniInt) value).value;
-		} else if (value instanceof OmniStr) {
-			return ((OmniStr) value).value;
+		if (value instanceof FLInt) {
+			return ((FLInt) value).value;
+		} else if (value instanceof FLStr) {
+			return ((FLStr) value).value;
 		} else {
 			throw new IllegalArgumentException();
 		}

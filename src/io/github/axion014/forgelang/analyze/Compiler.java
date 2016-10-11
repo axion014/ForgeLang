@@ -209,7 +209,7 @@ public class Compiler {
 		skipSpaces(isFirstWord);
 		if (!isFirstWord && hereChar() == '"') {
 			if (code.indexOf('"', cursor + 1) == -1) throw new CompileFailedException("Unterminated string");
-			OmniStr value = new OmniStr(code.substring(cursor + 1, code.indexOf('"', cursor + 1)).replace("\n", ""));
+			FLStr value = new FLStr(code.substring(cursor + 1, code.indexOf('"', cursor + 1)).replace("\n", ""));
 			int localcursor = 0;
 			int escape;
 			while ((escape = value.value.indexOf('\\', localcursor)) != -1) {
@@ -230,7 +230,7 @@ public class Compiler {
 		} else if (!isFirstWord && Character.isDigit(hereChar())) {
 			try {
 				return doIfMatchHere(intPattern, (hit) -> {
-					OmniInt value = new OmniInt(Integer.parseInt(hit));
+					FLInt value = new FLInt(Integer.parseInt(hit));
 					cursor += value.length;
 					return value;
 				});
