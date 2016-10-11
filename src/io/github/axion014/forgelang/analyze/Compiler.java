@@ -11,7 +11,7 @@ import io.github.axion014.forgelang.analyze.word.*;
 import io.github.axion014.forgelang.tool.DebugUtil;
 import io.github.axion014.forgelang.tool.Snippet;
 import io.github.axion014.forgelang.tool.throwablefunction.*;
-import io.github.axion014.forgelang.writer.*;
+import io.github.axion014.forgelang.writer.DestinationWriter;
 
 public class Compiler {
 	private int cursor;
@@ -213,7 +213,26 @@ public class Compiler {
 		for (;;) {
 			skipSpaces(false);
 			Matcher m = operatorPattern.matcher(hereCode());
-			if (!m.find()) break;
+			if (!m.find()) {
+				if (word instanceof SymbolOriginal) {
+					// @formatter:off
+					BinaryOperator tmp = new BinaryOperator() {{type = BinaryOperatorType.SGN;}};
+					// @formatter:on
+					switch(((Symbol)word).type) {
+						case "int":
+							tmp.right = new FLInt(0);
+							break;
+						case "string":
+							tmp.right = new FLStr("");
+							break;
+						default:
+							throw new CompileFailedException("Invaild default initialize");
+					}
+					tmp.left = word;
+					word = tmp;
+				}
+				break;
+			}
 			String operatorstr = code.substring(cursor, m.end() + cursor);
 			if (!BinaryOperatorType.isExist(operatorstr)) break;
 			BinaryOperatorType nowtype = BinaryOperatorType.from(operatorstr);
@@ -221,12 +240,12 @@ public class Compiler {
 			if (priority <= nowtype.priority) {
 				skipSpaces(false);
 				// @formatter:off
-				Word tmp = new BinaryOperator() {{
+				BinaryOperator tmp = new BinaryOperator() {{
 					type = nowtype;
 					right = readNext(nowtype.priority + 1);
 				}};
 				// @formatter:on
-				((BinaryOperator) tmp).left = word;
+				tmp.left = word;
 				word = tmp;
 			} else {
 				cursor -= ((Value) word).length;
