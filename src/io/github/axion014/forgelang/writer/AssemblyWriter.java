@@ -186,7 +186,7 @@ public class AssemblyWriter implements DestinationWriter {
 		if (strings != null) {
 			assembly.append("\tsection .data\n");
 			for (OmniStr string : strings) {
-				assembly.append("s" + string.pos + " db \"" + string.value + "\"\n");
+				assembly.append("s" + string.pos + " db \"" + string.value + "\", 0\n");
 			}
 			assembly.append("\t");
 		}
