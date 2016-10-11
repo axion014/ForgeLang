@@ -79,6 +79,7 @@ public class AssemblyWriter implements DestinationWriter {
 		} else if (expr instanceof CFuncCall) {
 			List<Word> args = new LinkedList<>(((CFuncCall) expr).args);
 			Collections.reverse(args);
+			int stack = args.size() * (is64bit ? 8 : 4);
 			if (is64bit) {
 				for (int i = 0; i < 6; i++) {
 					if (args.isEmpty()) break;
@@ -92,7 +93,7 @@ public class AssemblyWriter implements DestinationWriter {
 				assembly.append("push " + a + "\n\t");
 			}
 			assembly.append("call _" + ((CFuncCall) expr).name + "\n\t");
-			assembly.append("add " + sp + ", " + args.size() * (is64bit ? 8 : 4) + "\n\t");
+			assembly.append("sub " + sp + ", " + stack + "\n\t");
 		} else {
 			throw new InternalError("Invaild word found when writeing assembly");
 		}
