@@ -1,6 +1,8 @@
 package io.github.axion014.forgelang.writer;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 import io.github.axion014.forgelang.analyze.word.*;
 
@@ -100,7 +102,7 @@ public class AssemblyWriter implements DestinationWriter {
 	
 	private void scanExpr(Word expr) {
 		if (expr instanceof OmniStr) {
-			strings.add(((OmniStr) expr));
+			strings.add((OmniStr) expr);
 		}
 		if (expr instanceof CFuncCall && !cfuncs.contains(((CFuncCall) expr).name)) {
 			cfuncs.add(((CFuncCall) expr).name);
@@ -194,7 +196,11 @@ public class AssemblyWriter implements DestinationWriter {
 		for (String funcname : cfuncs) {
 			assembly.append("\textern _" + funcname + "\n");
 		}
-		assembly.append("_mymain:\n\tpush rbp\n\tmov rbp, rsp\n\t");
+		if (is64bit) {
+			assembly.append("_mymain:\n\tpush rbp\n\tmov rbp, rsp\n\t");
+		} else {
+			assembly.append("_mymain:\n\tpush ebp\n\tmov ebp, esp\n\t");
+		}
 		line = 1;
 		for (Word expr : exprs) {
 			afters.clear();
