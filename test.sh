@@ -8,10 +8,10 @@ if [ "$(uname)" = 'Darwin' ]; then
 elif [ "$(expr substr $(uname -s) 1 5)" = 'Linux' ]; then
   OS='Linux'
   rat='elf'
-elif [ "$(expr substr $(uname -s) 1 10)" = 'MINGW32_NT' ]; then                                                                                           
+elif [ "$(expr substr $(uname -s) 1 10)" = 'MINGW32_NT' ]; then
   OS='Windows'
   rat='win'
-elif [ "$(expr substr $(uname -s) 1 10)" = 'MINGW64_NT' ]; then                                                                                           
+elif [ "$(expr substr $(uname -s) 1 10)" = 'MINGW64_NT' ]; then
   OS='Windows'
   rat='win64'
 else
@@ -19,11 +19,15 @@ else
   exit 1
 fi
 
+a="tmp.asm"
 o="out.o"
+cof=""
 v=""
 ra=false
+sa=false
 gccopts=""
 c=false
+co=false
 i=false
 while [ -n "$1" ]; do
   if [ "$1" = "-ra" ]; then
@@ -34,45 +38,70 @@ while [ -n "$1" ]; do
       [ "$1" = "elf64" ] || [ "$1" = "elfx32" ] ; then
       rat=$1
   	fi
-  elif [ "$1" = "-c" ]; then
-    c=true
-  elif [ "$1" = "-v" ]; then
-    v="-v "
-  elif [ "$1" = "-i" ]; then
-    i=true
-    o=""
-  elif [ "$1" = "-gccopts" ]; then
-    shift
-    gccopts="$1"
-  else
-    o="$1"
+	else
+		if [ "$1" = "-c" ]; then
+	    c=true
+		elif [ "$1" = "-co" ]; then
+	    co=true
+			shift
+			cof="$1"
+	  elif [ "$1" = "-v" ]; then
+	    v="-v "
+	  elif [ "$1" = "-i" ]; then
+	    i=true
+			co=true
+	    o=""
+	  elif [ "$1" = "-gccopts" ]; then
+	    shift
+	    gccopts=" $1"
+		elif $ra && [ "$1" = "-a" ]; then
+			shift
+			a="$1"
+		elif [ "$1" = "-sa" ]; then
+			sa=true
+	  else
+	    o="$1"
+	  fi
+	  shift
   fi
-  shift
 done
 
 if [ ! $OS = 'Windows' ]; then
   gccopts="$gccopts -Wl,-no_pie"
 fi
 
-if $i; then
+if $co; then
   ./clean.sh -s
-  echo -e \n > tmp.fl
-  echo $o >> ./tmp.fl
-  java -jar ../../Jar/fl.jar ./tmp.fl | :
-  rm ./tmp.fl
+  if $i; then
+		echo -e \n > tmp.fl
+  	echo $o >> ./tmp.fl
+		cof=./tmp.fl
+	fi
+  java -jar ../../Jar/fl.jar $cof | :
+  $i && rm ./tmp.fl
   o="out.o"
 elif $ra; then
   rm -f $o
+	echo "nasm -f $rat -o $o $a"
   if [ $OS = 'Windows' ]; then
-    lib/nasm/nasm.exe -f $rat -o $o tmp.asm
+    lib/nasm/nasm.exe -f $rat -o $o $a
   else
-  	lib/nasm/nasm -f $rat -o $o tmp.asm
+  	lib/nasm/nasm -f $rat -o $o $a
   fi
 fi
 
-echo "gcc $v-o test.exe driver.c $o $gccopts"
-gcc $v-o test.exe driver.c $o $gccopts || exit
-echo "You got \"`./test.exe`\""
+echo "gcc $v-o test.exe driver.c $o$gccopts"
+gcc $v-o test.exe driver.c $o$gccopts || exit
+result=`./test.exe`
+if [ $? = 139 ]; then
+	echo "You got \"$result\", and got SIGSEGV"
+else
+	echo "You got \"$result\""
+fi
+if $sa; then
+	echo "Assembly is..."
+	cat $a
+fi
 
 if $c; then
   ./clean.sh -s

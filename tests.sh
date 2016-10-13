@@ -3,16 +3,10 @@ cd $(dirname $0)
 
 if [ "$(uname)" = 'Darwin' ]; then
   OS='Mac'
-  rat='macho64'
 elif [ "$(expr substr $(uname -s) 1 5)" = 'Linux' ]; then
   OS='Linux'
-  rat='elf'
-elif [ "$(expr substr $(uname -s) 1 10)" = 'MINGW32_NT' ]; then                                                                                           
+elif [ "$(expr substr $(uname -s) 1 10)" = 'MINGW32_NT' ] || [ "$(expr substr $(uname -s) 1 10)" = 'MINGW64_NT' ]; then
   OS='Windows'
-  rat='win'
-elif [ "$(expr substr $(uname -s) 1 10)" = 'MINGW64_NT' ]; then                                                                                           
-  OS='Windows'
-  rat='win64'
 else
   echo "Your platform ($(uname -a)) is not supported."
   exit 1
@@ -32,11 +26,17 @@ function test {
   else
     result=`./test.exe`
   fi
-  
-  if [ "$result" = "$expected" ]; then
+
+	ret=$?
+
+	if [ "$result" = "$expected" ]; then
     echo "Test done: You got \"$result\" from $1"
   else
-    echo "Test($1) failed: \"$expected\" expected but got \"$result\""
+		if [ $ret = 139 ]; then
+	  	echo "Test($1) failed: SIGSEGV occured"
+		else
+			echo "Test($1) failed: \"$expected\" expected but got \"$result\""
+		fi
     echo "Assembly is..."
     cat tmp.asm
   fi
