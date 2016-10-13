@@ -80,7 +80,7 @@ public class Compiler {
 	private static final Pattern intPattern = Pattern.compile("\\A[1-9]\\d*|0"); // any integer
 	private static final Pattern operatorPattern = Pattern.compile("\\A[^\\w\\s]+$?"); // 任意の記号列
 	private static final Pattern symbolPattern = Pattern.compile("\\A[a-zA-Z_]\\w*"); // 1文字目はアルファベット、それ以降はアルファベットか数字
-	private static final Pattern funcPattern = Pattern.compile("\\A[a-zA-Z_][\\w\\.]*(?=\\(([^,]+)?+(,([^,]+))*\\))");
+	private static final Pattern funcPattern = Pattern.compile("\\A[a-zA-Z_][\\w\\.]*(?= *\\((.|[\n])*\\))");
 	private static final Pattern typePattern = Pattern.compile("\\A(int|string)");
 
 	private void skipSpaces(boolean allownewline) {
@@ -287,49 +287,60 @@ public class Compiler {
 			} catch (MatchingFailedException e) {
 				throw new InternalError();
 			}
-		} else return doIfMatchHereElse(funcPattern, (name) -> {
-			cursor += name.length();
-			expect('(');
-			List<Word> args = new LinkedList<>();
-			for (;;) {
-				skipSpaces(true);
-				if (hereChar() == ')') {
-					break;
-				}
-				args.add(readNext(1));
-				if (hereChar() == ')') {
-					break;
-				}
-				expect(',');
-			}
-			cursor++;
-			Value value;
-			if (name.startsWith("c.")) {
-				name = name.substring(2);
-				value = new CFuncCall();
-				((CFuncCall) value).name = name;
-				((CFuncCall) value).args = args;
-			} else {
-				value = new FuncCall();
-				((FuncCall) value).name = name;
-				((FuncCall) value).args = args;
-			}
-			return value;
-		}, () -> {
-			return doIfMatchHereElse(typePattern, (type) -> {
-				cursor += type.length();
+		} else {
+			final int originalcursor = cursor;
+			return doIfMatchHereElse(funcPattern, (name) -> {
+				cursor += name.length();
 				skipSpaces(false);
-				if (Pattern.compile("\\A[a-zA-Z_]\\w*\\(([^,]+)?+(,([^,]+))*\\)\\s*\n(\t{" + (nest + 1) + "}.*)+")
-						.matcher(hereCode()).find()) {
-					moveToNextLine();
-					skipBlock();
-					return readPrimitive(true);
+				expect('(');
+				for (;;) {
+					skipSpaces(true);
+					if (hereChar() == ')') break;
+					readNext(1);
+					skipSpaces(false);
+					if (hereChar() == ')') break;
+					expect(',');
 				}
-				return makeSymbol(type);
+				cursor = originalcursor + name.length();
+				skipSpaces(false);
+				cursor++;
+				List<Word> args = new LinkedList<>();
+				for (;;) {
+					skipSpaces(true);
+					if (hereChar() == ')') break;
+					args.add(readNext(1));
+					if (hereChar() == ')') break;
+					expect(',');
+				}
+				cursor++;
+				Value value;
+				if (name.startsWith("c.")) {
+					name = name.substring(2);
+					value = new CFuncCall();
+					((CFuncCall) value).name = name;
+					((CFuncCall) value).args = args;
+				} else {
+					value = new FuncCall();
+					((FuncCall) value).name = name;
+					((FuncCall) value).args = args;
+				}
+				return value;
 			}, () -> {
-				return readSymbol();
+				return doIfMatchHereElse(typePattern, (type) -> {
+					cursor += type.length();
+					skipSpaces(false);
+					if (Pattern.compile("\\A[a-zA-Z_]\\w*\\(([^,]+)?+(,([^,]+))*\\)\\s*\n(\t{" + (nest + 1) + "}.*)+")
+							.matcher(hereCode()).find()) {
+						moveToNextLine();
+						skipBlock();
+						return readPrimitive(true);
+					}
+					return makeSymbol(type);
+				}, () -> {
+					return readSymbol();
+				});
 			});
-		});
+		}
 	}
 
 	private Symbol readSymbol() throws CompileFailedException {
