@@ -14,7 +14,7 @@ fi
 
 function test {
   ./clean.sh -s
-  java -jar ../../Jar/fl.jar $1 | :
+  java -jar ./fl.jar $1 | :
   if [ $OS = 'Windows' ]; then
     gcc -o test.exe driver.c out.o || exit
   else

@@ -77,7 +77,7 @@ if $co; then
   	echo $o >> ./tmp.fl
 		cof=./tmp.fl
 	fi
-  java -jar ../../Jar/fl.jar $cof | :
+  java -jar ./fl.jar $cof | :
   $i && rm ./tmp.fl
   o="out.o"
 elif $ra; then
