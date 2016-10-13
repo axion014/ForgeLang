@@ -100,14 +100,8 @@ public class AssemblyWriter implements DestinationWriter {
 			throw new InternalError("Invaild word found when writeing assembly");
 		}
 	}
-	
+
 	private void scanExpr(Word expr) {
-		if (expr instanceof FLStr) {
-			strings.add((FLStr) expr);
-		}
-		if (expr instanceof CFuncCall && !cfuncs.contains(((CFuncCall) expr).name)) {
-			cfuncs.add(((CFuncCall) expr).name);
-		}
 		if (expr instanceof BinaryOperator) {
 			if (((BinaryOperator) expr).type == BinaryOperatorType.SGN) {
 				scanExpr(((BinaryOperator) expr).right);
@@ -121,11 +115,15 @@ public class AssemblyWriter implements DestinationWriter {
 			for (Word arg : args)
 				scanExpr(arg);
 		} else if (expr instanceof CFuncCall) {
+			if (!cfuncs.contains(((CFuncCall) expr).name)) cfuncs.add(((CFuncCall) expr).name);
 			List<Word> args = new LinkedList<>(((CFuncCall) expr).args);
 			Collections.reverse(args);
 			for (Word arg : args)
 				scanExpr(arg);
-		}
+		} else if (expr instanceof Func) {
+			for (Word inexpr : ((Func) expr).scope.body)
+				scanExpr(inexpr);
+		} else if ((expr instanceof FLStr) && !strings.contains(expr)) strings.add((FLStr) expr);
 	}
 
 	private void writeSymbol(Symbol target) {

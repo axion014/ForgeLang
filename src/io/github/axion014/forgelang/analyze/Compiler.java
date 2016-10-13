@@ -259,24 +259,33 @@ public class Compiler {
 		skipSpaces(isFirstWord);
 		if (!isFirstWord && hereChar() == '"') {
 			if (code.indexOf('"', cursor + 1) == -1) throw new CompileFailedException("Unterminated string");
-			FLStr value = new FLStr(code.substring(cursor + 1, code.indexOf('"', cursor + 1)).replace("\n", ""));
+			String value = code.substring(cursor + 1, code.indexOf('"', cursor + 1)).replace("\n", "");
 			int localcursor = 0;
 			int escape;
-			while ((escape = value.value.indexOf('\\', localcursor)) != -1) {
+			while ((escape = value.indexOf('\\', localcursor)) != -1) {
 				localcursor += escape + 1;
-				switch (value.value.charAt(localcursor)) {
+				switch (value.charAt(localcursor)) {
 					case 'n':
-						value.value.replaceFirst("\\n", "\n");
+						value.replaceFirst("\\n", "\n");
 						break;
 					case 't':
-						value.value.replaceFirst("\\t", "\t");
+						value.replaceFirst("\\t", "\t");
 						break;
 					default:
 						throw new CompileFailedException("Unterminated \\");
 				}
 			}
-			cursor += value.length;
-			return value;
+			if (FLStr.strings != null) {
+				for (FLStr str = FLStr.strings; str.next != null; str = str.next) {
+					if (str.value.equals(value)) {
+						cursor += str.length;
+						return str;
+					}
+				}
+			}
+			FLStr obj = new FLStr(value);
+			cursor += obj.length;
+			return obj;
 		} else if (!isFirstWord && Character.isDigit(hereChar())) {
 			try {
 				return doIfMatchHere(intPattern, (hit) -> {

@@ -4,7 +4,7 @@ public class FLStr extends Value {
 	public String value;
 	public int pos;
 	public FLStr next;
-	private static FLStr strings;
+	public static FLStr strings;
 	public FLStr(String value) {
 		this.value = value;
 		length = value.length() + 2;
