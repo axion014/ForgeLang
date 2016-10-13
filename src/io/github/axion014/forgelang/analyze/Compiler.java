@@ -34,7 +34,7 @@ public class Compiler {
 	public Compiler(String code) {
 		this.code = code;
 	}
-	
+
 	/**
 	 * コンパイルします。
 	 * 
@@ -71,6 +71,7 @@ public class Compiler {
 			}
 		} catch (CompileFailedException e) {
 			e.line = line;
+			e.code = hereCode();
 			throw e;
 		}
 		writer.writeCode(exprs, output);

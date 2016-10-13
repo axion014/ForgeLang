@@ -2,6 +2,7 @@ package io.github.axion014.forgelang.analyze.exception;
 
 public class CompileFailedException extends Exception {
 	public int line;
+	public String code;
 
 	public CompileFailedException(Throwable cause) {
 		super(cause);

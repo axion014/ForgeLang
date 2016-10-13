@@ -73,7 +73,7 @@ public class Main {
 			e.printStackTrace();
 			System.exit(1);
 		} catch (CompileFailedException e) {
-			System.err.print("Compile error(line " + e.line + "): ");
+			System.err.print("Compile error(line " + e.line + ": " + e.code.substring(0, 12) + "...): ");
 			e.printStackTrace();
 			System.exit(1);
 		}
