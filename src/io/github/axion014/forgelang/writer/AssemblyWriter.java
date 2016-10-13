@@ -158,7 +158,7 @@ public class AssemblyWriter implements DestinationWriter {
 
 	private void moveTo(Symbol target) {
 		if (target.isparam) {
-			assembly.append("mov [" + d + " + " + target.pos * (is64bit ? 8 : 4) + "], " + a + "\n\t");
+			assembly.append("mov [" + bp + " + " + (target.pos + 1) * (is64bit ? 8 : 4) + "], " + a + "\n\t");
 		} else {
 			assembly.append("mov [" + bp + " - " + target.pos * (is64bit ? 8 : 4) + "], " + a + "\n\t");
 		}
@@ -166,7 +166,7 @@ public class AssemblyWriter implements DestinationWriter {
 
 	private void moveFrom(Symbol target) {
 		if (target.isparam) {
-			assembly.append("mov " + a + ", [" + d + " + " + target.pos * (is64bit ? 8 : 4) + "]\n\t");
+			assembly.append("mov " + a + ", [" + bp + " + " + (target.pos + 1) * (is64bit ? 8 : 4) + "]\n\t");
 		} else {
 			assembly.append("mov " + a + ", [" + bp + " - " + target.pos * (is64bit ? 8 : 4) + "]\n\t");
 		}
@@ -194,11 +194,7 @@ public class AssemblyWriter implements DestinationWriter {
 		for (String funcname : cfuncs) {
 			assembly.append("\textern _" + funcname + "\n");
 		}
-		if (is64bit) {
-			assembly.append("_mymain:\n\tpush rbp\n\tmov rbp, rsp\n\t");
-		} else {
-			assembly.append("_mymain:\n\tpush ebp\n\tmov ebp, esp\n\t");
-		}
+		assembly.append("_mymain:\n\tpush " + bp + "\n\tmov " + bp + ", " + sp + "\n\t");
 		line = 1;
 		for (Word expr : exprs) {
 			afters.clear();
@@ -224,11 +220,11 @@ public class AssemblyWriter implements DestinationWriter {
 		assembly.append("leave\n\tret\n");
 		for (Func func : funcs) { // function define
 			assembly.append(func.name + ":\n\t");
-			assembly.append("mov " + d + ", " + sp + "\n\t");
+			assembly.append("push " + bp + "\n\tmov " + bp + ", " + sp + "\n\t");
 			for (Word expr : func.scope) {
 				writeExpr(expr);
 			}
-			assembly.append("ret " + func.params.size() * (is64bit ? 8 : 4) + "\n");
+			assembly.append("leave\n\tret " + func.params.size() * (is64bit ? 8 : 4) + "\n");
 		}
 	}
 }
