@@ -100,7 +100,7 @@ public class Compiler {
 		List<Symbol> params = new LinkedList<>();
 		for (;;) {
 			skipSpaces(true);
-			if (code.charAt(cursor) == ')') break;
+			if (hereChar() == ')') break;
 			doIfMatchHereElse(typePattern, (type) -> {
 				cursor += type.length();
 				skipSpaces(false);
@@ -108,7 +108,7 @@ public class Compiler {
 			}, () -> {
 				throw new CompileFailedException("Parameter expected");
 			});
-			if (code.charAt(cursor) == ')') break;
+			if (hereChar() == ')') break;
 			expect(',');
 		}
 		cursor++;
@@ -177,7 +177,7 @@ public class Compiler {
 				String name = code.substring(cursor, m.end() + cursor);
 				cursor += name.length();
 				skipSpaces(false);
-				if (code.charAt(cursor) == '\n') {
+				if (hereChar() == '\n') {
 					cursor++;
 					return;
 				}
@@ -218,7 +218,7 @@ public class Compiler {
 					// @formatter:off
 					BinaryOperator tmp = new BinaryOperator() {{type = BinaryOperatorType.SGN;}};
 					// @formatter:on
-					switch(((Symbol)word).type) {
+					switch (((Symbol) word).type) {
 						case "int":
 							tmp.right = new FLInt(0);
 							break;

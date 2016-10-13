@@ -118,15 +118,13 @@ public class AssemblyWriter implements DestinationWriter {
 		} else if (expr instanceof FuncCall) {
 			List<Word> args = new LinkedList<>(((FuncCall) expr).args);
 			Collections.reverse(args);
-			for (Word arg : args) {
+			for (Word arg : args)
 				scanExpr(arg);
-			}
 		} else if (expr instanceof CFuncCall) {
 			List<Word> args = new LinkedList<>(((CFuncCall) expr).args);
 			Collections.reverse(args);
-			for (Word arg : args) {
+			for (Word arg : args)
 				scanExpr(arg);
-			}
 		}
 	}
 
