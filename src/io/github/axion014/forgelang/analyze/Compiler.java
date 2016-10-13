@@ -38,8 +38,7 @@ public class Compiler {
 	/**
 	 * コンパイルします。
 	 * 
-	 * @param writer
-	 *            構文木から出力コードに変換するためのオブジェクト
+	 * @param writer 構文木から出力コードに変換するためのオブジェクト
 	 * @return コンパイルの結果
 	 * @throws CompileFailedException
 	 */
@@ -121,8 +120,7 @@ public class Compiler {
 	/**
 	 * カーソルがブロックの初めにある状態で呼び出すと、カーソルをブロックの終わりまで移動し、中の式を返します。
 	 * 
-	 * @param isFunc
-	 *            ブロックが関数か
+	 * @param isFunc ブロックが関数か
 	 * @return ブロック内にある式のリスト
 	 * @throws CompileFailedException
 	 */
@@ -340,7 +338,7 @@ public class Compiler {
 					cursor += type.length();
 					skipSpaces(false);
 					if (Pattern.compile("\\A[a-zA-Z_]\\w*\\(([^,]+)?+(,([^,]+))*\\)\\s*\n(\t{" + (nest + 1) + "}.*)+")
-							.matcher(hereCode()).find()) {
+						.matcher(hereCode()).find()) {
 						moveToNextLine();
 						skipBlock();
 						return readPrimitive(true);
@@ -401,9 +399,8 @@ public class Compiler {
 	}
 
 	private Symbol findVariable(String name) {
-		for (SymbolOriginal v = variables; v != null; v = v.next) {
+		for (SymbolOriginal v = scope.variables; v != null; v = v.next)
 			if (name.equals(v.name) && v.scope == scope) return new Symbol(v);
-		}
 		return null;
 	}
 
@@ -424,7 +421,7 @@ public class Compiler {
 	@SuppressWarnings("unused")
 	private void deleteVariable(String name) {
 		SymbolOriginal prev = null;
-		for (SymbolOriginal v = variables; v != null; v = v.next) {
+		for (SymbolOriginal v = scope.variables; v != null; v = v.next) {
 			if (name.equals(v.name) && prev != null) prev.next = v.next;
 			prev = v;
 		}
@@ -432,9 +429,8 @@ public class Compiler {
 
 	@SuppressWarnings("unused")
 	private Func findFunction(String name) {
-		for (Func v = functions; v != null; v = v.next) {
+		for (Func v = functions; v != null; v = v.next)
 			if (name.equals(v.name)) return v;
-		}
 		return null;
 	}
 
@@ -464,8 +460,7 @@ public class Compiler {
 	/**
 	 * かかる時間を計測してコンパイルします。
 	 * 
-	 * @param writer
-	 *            構文木から出力コードに変換するためのオブジェクト
+	 * @param writer 構文木から出力コードに変換するためのオブジェクト
 	 * @return コンパイルの結果
 	 * @throws CompileFailedException
 	 */
