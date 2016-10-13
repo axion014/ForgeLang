@@ -16,11 +16,12 @@ public class Func extends Value {
 		this.name = name;
 		length = name.length();
 		next = env.functions;
+		Scope parent = env.scope;
 		scope = new Scope(() -> {
 			params = env.getParams();
 			return env.readBlock(true);
 		}, env);
-		env.exitScope();
+		env.scope = parent;
 		env.functions = this;
 	}
 

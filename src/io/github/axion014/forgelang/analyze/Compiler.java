@@ -16,10 +16,7 @@ import io.github.axion014.forgelang.writer.DestinationWriter;
 public class Compiler {
 	private int cursor;
 	private String code;
-	/**
-	 * コード内で定義された変数。
-	 */
-	public SymbolOriginal variables = null;
+
 	/**
 	 * コード内で定義された関数。
 	 */
@@ -29,7 +26,7 @@ public class Compiler {
 	/**
 	 * 現在のスコープ。
 	 */
-	public Scope scope;
+	public Scope scope = new Scope();
 
 	public Compiler(String code) {
 		this.code = code;
@@ -390,7 +387,7 @@ public class Compiler {
 	private Symbol makeSymbol(String type) throws CompileFailedException {
 		return doIfMatchHereElse(symbolPattern, (name) -> {
 			if (isKeyword(name)) throw new CompileFailedException("\"" + name + "\" is a keyword");
-			if (isVariable(name)) throw new CompileFailedException("duplicated local variable " + name);
+			if (isLocalVariable(name)) throw new CompileFailedException("duplicated local variable " + name);
 			cursor += name.length();
 			return new SymbolOriginal(name, type, this);
 		}, () -> {
@@ -404,18 +401,10 @@ public class Compiler {
 		return null;
 	}
 
-	private boolean isVariable(String name) {
-		for (SymbolOriginal v = variables; v != null; v = v.next) {
+	private boolean isLocalVariable(String name) {
+		for (SymbolOriginal v = scope.variables; v != null; v = v.next)
 			if (name.equals(v.name) && v.scope == scope) return true;
-		}
 		return false;
-	}
-
-	/**
-	 * 現在のスコープを脱出します。
-	 */
-	public void exitScope() {
-		scope = scope.parent;
 	}
 
 	@SuppressWarnings("unused")

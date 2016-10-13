@@ -13,9 +13,9 @@ public class SymbolOriginal extends Symbol {
 		this.type = type;
 		length = name.length();
 		scope = env.scope;
-		pos = env.variables != null ? env.variables.pos + 1 : 1;
-		next = env.variables;
-		env.variables = this;
+		pos = env.scope.variables != null ? env.scope.variables.pos + 1 : 1;
+		next = env.scope.variables;
+		env.scope.variables = this;
 	}
 	
 	@Override
