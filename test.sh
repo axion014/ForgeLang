@@ -4,15 +4,19 @@ cd $(dirname $0)
 
 if [ "$(uname)" = 'Darwin' ]; then
   OS='Mac'
+	e="exe"
   rat='macho64'
 elif [ "$(expr substr $(uname -s) 1 5)" = 'Linux' ]; then
   OS='Linux'
+	e="exe"
   rat='elf'
 elif [ "$(expr substr $(uname -s) 1 10)" = 'MINGW32_NT' ]; then
   OS='Windows'
+	e="test.exe"
   rat='win'
 elif [ "$(expr substr $(uname -s) 1 10)" = 'MINGW64_NT' ]; then
   OS='Windows'
+	e="test.exe"
   rat='win64'
 else
   echo "Your platform ($(uname -a)) is not supported."
@@ -25,12 +29,28 @@ cof=""
 v=""
 ra=false
 sa=false
+sc=false
 gccopts=""
 c=false
 co=false
 i=false
 while [ -n "$1" ]; do
-  if [ "$1" = "-ra" ]; then
+	if [ "$1" = "-h" ]; then
+		echo "Forgelang test v1.0"
+		echo "Usage: ./test.sh <-h | [-ra [bintype] [-a <assembly>] [-sa] | -co <file> | -i] [-sc] [-c] [-v] [object] [-gccopts <options>]>"
+		echo "-h: show this help"
+		echo -e "-ra: reassemble the file. default file name is tmp.asm. \n     option argument is binary file type."
+		echo "	-a: assembly file name."
+		echo "	-sa: show assembly file."
+		echo "-co: compile the .fl file. required argument is file name."
+		echo "-i: <object> argument change to Forgelang source, compile it."
+		echo "-sc: show internal commands."
+		echo "-c: clean project."
+		echo "-v: show gcc verbose."
+		echo "-e: executable file name."
+		echo "-gccopts: transfer arguments to gcc."
+		exit
+	elif [ "$1" = "-ra" ]; then
     ra=true
     shift
     if [ "$1" = "win" ] || [ "$1" = "win32" ] || [ "$1" = "win64" ] || [ "$1" = "macho" ] ||
@@ -57,8 +77,13 @@ while [ -n "$1" ]; do
 		elif $ra && [ "$1" = "-a" ]; then
 			shift
 			a="$1"
+		elif [ "$1" = "-e" ]; then
+			shift
+			e="$1"
 		elif [ "$1" = "-sa" ]; then
 			sa=true
+		elif [ "$1" = "-sc" ]; then
+			sc=true
 	  else
 	    o="$1"
 	  fi
@@ -82,7 +107,7 @@ if $co; then
   o="out.o"
 elif $ra; then
   rm -f $o
-	echo "nasm -f $rat -o $o $a"
+	$sc && echo "nasm -f $rat -o $o $a"
   if [ $OS = 'Windows' ]; then
     lib/nasm/nasm.exe -f $rat -o $o $a
   else
@@ -90,11 +115,11 @@ elif $ra; then
   fi
 fi
 
-echo "gcc $v-o test.exe driver.c $o$gccopts"
-gcc $v-o test.exe driver.c $o$gccopts || exit
-result=`./test.exe`
+$sc && echo "gcc $v-o $e driver.c $o$gccopts"
+gcc $v-o $e driver.c $o$gccopts || exit
+result=`./$e`
 if [ $? = 139 ]; then
-	echo "You got \"$result\", and got SIGSEGV"
+	echo "You got SIGSEGV"
 else
 	echo "You got \"$result\""
 fi
