@@ -17,10 +17,11 @@ public class Func extends Value {
 		length = name.length();
 		next = env.functions;
 		Scope parent = env.scope;
-		scope = new Scope(() -> {
-			params = env.getParams();
-			return env.readBlock(true);
-		}, env);
+		scope = new Scope();
+		env.scope = scope;
+		params = env.readParams();
+		scope.getExprs().addAll(env.readBlock(true));
+		scope.freeze();
 		env.scope = parent;
 		env.functions = this;
 	}
@@ -35,7 +36,7 @@ public class Func extends Value {
 		}
 		ret.deleteCharAt(ret.length() - 1);
 		ret.append(")\n");
-		for (Word expr : scope) {
+		for (Word expr : scope.getExprs()) {
 			ret.append("\t");
 			ret.append(expr.toString());
 			ret.append("\n");

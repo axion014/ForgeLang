@@ -1,9 +1,7 @@
 package io.github.axion014.forgelang.writer;
 
-import java.util.List;
-
-import io.github.axion014.forgelang.analyze.word.Word;
+import io.github.axion014.forgelang.analyze.Scope;
 
 public interface DestinationWriter {
-	void writeCode(List<Word> exprs, StringBuilder assembly);
+	void writeCode(Scope global, StringBuilder assembly);
 }

@@ -41,7 +41,6 @@ public class Compiler {
 	 */
 	public String compile(DestinationWriter writer) throws CompileFailedException {
 		StringBuilder output = new StringBuilder();
-		List<Word> exprs = new LinkedList<>();
 		try {
 			cursor = 0;
 			line = 1;
@@ -54,15 +53,15 @@ public class Compiler {
 			line = 1;
 			nest = 0;
 			do {
-				exprs.add(readExpression(false));
+				scope.getExprs().add(readExpression(false));
 				line++;
 			} while (cursor != code.length());
 			for (Func func = functions; func != null; func = func.next) {
-				exprs.add(func);
+				scope.getExprs().add(func);
 			}
 			System.out.println("Parse complete");
 			System.out.println("Syntax Trees:");
-			for (Word expr : exprs) {
+			for (Word expr : scope) {
 				System.out.println(expr.toString());
 			}
 		} catch (CompileFailedException e) {
@@ -70,7 +69,7 @@ public class Compiler {
 			e.code = hereCode();
 			throw e;
 		}
-		writer.writeCode(exprs, output);
+		writer.writeCode(scope, output);
 		return output.toString();
 	}
 
@@ -87,12 +86,12 @@ public class Compiler {
 	}
 
 	/**
-	 * カーソルが仮引数のカッコの前にあるときに呼び出すと、カーソルを次の行の初めに移動し、リストを返します。
+	 * カーソルが仮引数のカッコの前にあるときに呼び出すと、仮引数をパースします。カーソルは次の行の初めに移動します。
 	 * 
 	 * @return 仮引数が含まれたリスト
 	 * @throws CompileFailedException
 	 */
-	public List<Symbol> getParams() throws CompileFailedException {
+	public List<Symbol> readParams() throws CompileFailedException {
 		expect('(');
 		List<Symbol> params = new LinkedList<>();
 		for (;;) {

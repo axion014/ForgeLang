@@ -1,9 +1,10 @@
 package io.github.axion014.forgelang.analyze.word;
 
+import io.github.axion014.forgelang.analyze.exception.CompileFailedException;
+
 public class Symbol extends Value {
 	public String name;
 	public String type;
-	public int pos;
 	public boolean isparam;
 	public UnaryOperator after = null;
 	private SymbolOriginal original;
@@ -17,7 +18,6 @@ public class Symbol extends Value {
 		type = original.type;
 		length = original.length;
 		isparam = original.isparam;
-		pos = original.pos;
 	}
 
 	@Override
@@ -35,7 +35,11 @@ public class Symbol extends Value {
 		return (after != null ? after.toString() : "") + super.afterToString();
 	}
 
-	public Symbol asParam() {
-		return new Symbol(original.asParam());
+	public SymbolOriginal asParam() throws CompileFailedException {
+		throw new CompileFailedException("can't set parameter flag to clone symbol");
+	}
+
+	public int pos() {
+		return original.pos();
 	}
 }

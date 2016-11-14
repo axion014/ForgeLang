@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import io.github.axion014.forgelang.analyze.Scope;
 import io.github.axion014.forgelang.analyze.word.*;
 
 public class AssemblyWriter implements DestinationWriter {
@@ -134,7 +135,7 @@ public class AssemblyWriter implements DestinationWriter {
 			for (Word arg : args)
 				scanExpr(arg);
 		} else if (expr instanceof Func) {
-			for (Word inexpr : ((Func) expr).scope.body)
+			for (Word inexpr : ((Func) expr).scope.getExprs())
 				scanExpr(inexpr);
 		} else if ((expr instanceof FLStr) && !strings.contains(expr)) strings.add((FLStr) expr);
 	}
@@ -186,15 +187,14 @@ public class AssemblyWriter implements DestinationWriter {
 	}
 
 	@Override
-	public void writeCode(List<Word> exprs, StringBuilder assembly) {
+	public void writeCode(Scope global, StringBuilder assembly) {
 		this.assembly = assembly;
 		funcs = new LinkedList<>();
 		afters = new LinkedList<>();
 		strings = new LinkedList<>();
 		cfuncs = new LinkedList<>();
-		for (Word expr : exprs) {
+		for (Word expr : global)
 			scanExpr(expr);
-		}
 		if (strings != null) {
 			assembly.append("\tsection .data\n");
 			for (FLStr string : strings) {
@@ -208,8 +208,12 @@ public class AssemblyWriter implements DestinationWriter {
 			assembly.append("\textern _" + funcname + "\n");
 		}
 		assembly.append("_mymain:\n\tpush " + bp + "\n\tmov " + bp + ", " + sp + "\n\t");
+		int pos = 0;
+		for (SymbolOriginal v = global.variables; v != null; v = v.next)
+			if (!v.isparam) pos++;
+		assembly.append("sub " + sp + ", " + (int) Math.ceil(((double) pos * bytes) / 16.0) * 16 + "\n\t");
 		line = 1;
-		for (Word expr : exprs) {
+		for (Word expr : global) {
 			afters.clear();
 			writeExpr(expr);
 			for (Symbol target : afters) {
@@ -234,7 +238,11 @@ public class AssemblyWriter implements DestinationWriter {
 		for (Func func : funcs) { // function define
 			assembly.append(func.name + ":\n\t");
 			assembly.append("push " + bp + "\n\tmov " + bp + ", " + sp + "\n\t");
-			for (Word expr : func.scope) {
+			pos = 0;
+			for (SymbolOriginal v = func.scope.variables; v != null; v = v.next)
+				if (!v.isparam) pos++;
+			assembly.append("sub " + sp + ", " + pos * bytes + "\n\t");
+			for (Word expr : func.scope.getExprs()) {
 				writeExpr(expr);
 			}
 			assembly.append("leave\n\tret " + func.params.size() * bytes + "\n");
