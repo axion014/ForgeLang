@@ -20,6 +20,17 @@ public class Scope implements Iterable<Word> {
 	}
 	
 	public Scope() {body = new Word[0];}
+	Symbol findVariable(String name) {
+		for (SymbolOriginal v = variables; v != null; v = v.next)
+			if (name.equals(v.name) && v.scope == this) return new Symbol(v);
+		return null;
+	}
+	
+	boolean isLocalVariable(String name) {
+		for (SymbolOriginal v = variables; v != null; v = v.next)
+			if (name.equals(v.name) && v.scope == this) return true;
+		return false;
+	}
 
 	@Override
 	public Iterator<Word> iterator() {

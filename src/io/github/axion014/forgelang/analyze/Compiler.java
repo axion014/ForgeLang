@@ -363,7 +363,7 @@ public class Compiler {
 		});
 		return doIfMatchHereElse(symbolPattern, (name) -> {
 			if (isKeyword(name)) throw new CompileFailedException("\"" + name + "\" is a keyword");
-			Symbol value = findVariable(name);
+			Symbol value = scope.findVariable(name);
 			if (value == null) throw new CompileFailedException("local variable " + name + " is not exist");
 			cursor += name.length();
 			skipSpaces(false);
@@ -387,24 +387,12 @@ public class Compiler {
 	private Symbol makeSymbol(String type) throws CompileFailedException {
 		return doIfMatchHereElse(symbolPattern, (name) -> {
 			if (isKeyword(name)) throw new CompileFailedException("\"" + name + "\" is a keyword");
-			if (isLocalVariable(name)) throw new CompileFailedException("duplicated local variable " + name);
+			if (scope.isLocalVariable(name)) throw new CompileFailedException("duplicated local variable " + name);
 			cursor += name.length();
 			return new SymbolOriginal(name, type, this);
 		}, () -> {
 			throw new CompileFailedException("Primitive expected");
 		});
-	}
-
-	private Symbol findVariable(String name) {
-		for (SymbolOriginal v = scope.variables; v != null; v = v.next)
-			if (name.equals(v.name) && v.scope == scope) return new Symbol(v);
-		return null;
-	}
-
-	private boolean isLocalVariable(String name) {
-		for (SymbolOriginal v = scope.variables; v != null; v = v.next)
-			if (name.equals(v.name) && v.scope == scope) return true;
-		return false;
 	}
 
 	@SuppressWarnings("unused")

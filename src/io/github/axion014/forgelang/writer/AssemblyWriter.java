@@ -22,20 +22,33 @@ public class AssemblyWriter implements DestinationWriter {
 	private String sp;
 	private String bp;
 	private boolean is64bit;
+	private int bytes;
 
 	public AssemblyWriter(boolean is64bit) {
 		this.is64bit = is64bit;
-		a = is64bit ? "rax" : "eax";
-		b = is64bit ? "rbx" : "ebx";
-		c = is64bit ? "rcx" : "ecx";
-		d = is64bit ? "rdx" : "edx";
-		sp = is64bit ? "rsp" : "esp";
-		bp = is64bit ? "rbp" : "ebp";
+		if (is64bit) {
+			bytes = 8;
+			a = "rax";
+			b = "rbx";
+			c = "rcx";
+			d = "rdx";
+			sp = "rsp";
+			bp = "rbp";
+		} else {
+			bytes = 4;
+			a = "eax";
+			b = "ebx";
+			c = "ecx";
+			d = "edx";
+			sp = "esp";
+			bp = "ebp";
+		}
+		
 	}
 
 	private void writeExpr(Word expr) {
 		if (expr instanceof FLInt) {
-			assembly.append(String.format("mov " + a + ", %d\n\t", ((FLInt) expr).value));
+			assembly.append(String.format("mov %s, %d\n\t", a, ((FLInt) expr).value));
 		} else if (expr instanceof FLStr) {
 			assembly.append("mov " + a + ", s" + ((FLStr) expr).pos + "\n\t");
 		} else if (expr instanceof BinaryOperator) {
@@ -81,7 +94,6 @@ public class AssemblyWriter implements DestinationWriter {
 		} else if (expr instanceof CFuncCall) {
 			List<Word> args = new LinkedList<>(((CFuncCall) expr).args);
 			Collections.reverse(args);
-			int stack = args.size() * (is64bit ? 8 : 4);
 			if (is64bit) {
 				for (int i = 0; i < 6; i++) {
 					if (args.isEmpty()) break;
@@ -90,6 +102,7 @@ public class AssemblyWriter implements DestinationWriter {
 					assembly.append("mov " + argregisters64[i] + ", " + a + "\n\t");
 				}
 			}
+			int stack = args.size() * bytes;
 			for (Word arg : args) {
 				writeExpr(arg);
 				assembly.append("push " + a + "\n\t");
@@ -158,17 +171,17 @@ public class AssemblyWriter implements DestinationWriter {
 
 	private void moveTo(Symbol target) {
 		if (target.isparam) {
-			assembly.append("mov [" + bp + " + " + (target.pos + 1) * (is64bit ? 8 : 4) + "], " + a + "\n\t");
+			assembly.append("mov [" + bp + " + " + (target.pos() + 1) * bytes + "], " + a + "\n\t");
 		} else {
-			assembly.append("mov [" + bp + " - " + target.pos * (is64bit ? 8 : 4) + "], " + a + "\n\t");
+			assembly.append("mov [" + bp + " - " + target.pos() * bytes + "], " + a + "\n\t");
 		}
 	}
 
 	private void moveFrom(Symbol target) {
 		if (target.isparam) {
-			assembly.append("mov " + a + ", [" + bp + " + " + (target.pos + 1) * (is64bit ? 8 : 4) + "]\n\t");
+			assembly.append("mov " + a + ", [" + bp + " + " + (target.pos() + 1) * bytes + "]\n\t");
 		} else {
-			assembly.append("mov " + a + ", [" + bp + " - " + target.pos * (is64bit ? 8 : 4) + "]\n\t");
+			assembly.append("mov " + a + ", [" + bp + " - " + target.pos() * bytes + "]\n\t");
 		}
 	}
 
@@ -224,7 +237,7 @@ public class AssemblyWriter implements DestinationWriter {
 			for (Word expr : func.scope) {
 				writeExpr(expr);
 			}
-			assembly.append("leave\n\tret " + func.params.size() * (is64bit ? 8 : 4) + "\n");
+			assembly.append("leave\n\tret " + func.params.size() * bytes + "\n");
 		}
 	}
 }
