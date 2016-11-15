@@ -42,23 +42,20 @@ public class Compiler {
 	public String compile(DestinationWriter writer) throws CompileFailedException {
 		StringBuilder output = new StringBuilder();
 		try {
-			cursor = 0;
-			line = 1;
-			nest = 0;
+			reset();
 			do {
 				registerFunction();
 				line++;
-			} while (cursor != code.length());
-			cursor = 0;
-			line = 1;
-			nest = 0;
+			} while (!finished());
+			reset();
 			do {
 				scope.getExprs().add(readExpression(false));
 				line++;
-			} while (cursor != code.length());
+			} while (!finished());
 			for (Func func = functions; func != null; func = func.next) {
 				scope.getExprs().add(func);
 			}
+			scope.freeze();
 			System.out.println("Parse complete");
 			System.out.println("Syntax Trees:");
 			for (Word expr : scope) {
@@ -465,6 +462,16 @@ public class Compiler {
 		if (hereChar() == '\n') return code.charAt(cursor - 1);
 		String tmp = code.substring(cursor, code.indexOf('\n', cursor)).trim();
 		return tmp.charAt(tmp.length() - 1);
+	}
+	
+	private void reset() {
+		cursor = 0;
+		line = 1;
+		nest = 0;
+	}
+	
+	private boolean finished() {
+		return cursor == code.length();
 	}
 
 	private <E extends Throwable> void doIfMatchHere(Pattern pattern, ThrowableConsumer<String, E> task) throws E {

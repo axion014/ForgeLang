@@ -1,6 +1,6 @@
 package io.github.axion014.forgelang.analyze.word;
 
-import io.github.axion014.forgelang.analyze.exception.CompileFailedException;
+import io.github.axion014.forgelang.analyze.exception.CompilerInternalException;
 
 public class Symbol extends Value {
 	public String name;
@@ -35,8 +35,8 @@ public class Symbol extends Value {
 		return (after != null ? after.toString() : "") + super.afterToString();
 	}
 
-	public SymbolOriginal asParam() throws CompileFailedException {
-		throw new CompileFailedException("can't set parameter flag to clone symbol");
+	public SymbolOriginal asParam() {
+		throw new CompilerInternalException("can't set parameter flag to clone symbol");
 	}
 
 	public int pos() {
