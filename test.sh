@@ -98,7 +98,7 @@ fi
 if $co; then
   ./clean.sh -s
   if $i; then
-		echo -e \n > tmp.fl
+		echo -e "\n" > tmp.fl
   	echo $o >> ./tmp.fl
 		cof=./tmp.fl
 	fi

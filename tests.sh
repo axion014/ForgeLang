@@ -50,3 +50,4 @@ test test/old/test12.fl 1
 test test/test13.fl 13
 test test/test14.fl "foo\n5\n30"
 test test/test15.fl "9\n9\n5"
+test test/test16.fl 0
