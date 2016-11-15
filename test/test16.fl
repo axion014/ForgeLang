@@ -1,0 +1,4 @@
+int x
+string s
+s += "%d"
+c.printf(s, 100 * x)
